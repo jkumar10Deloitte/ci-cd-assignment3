@@ -1,8 +1,9 @@
 pipeline {
-  agent any
- 
-  environment {
-    DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
+  agent {
+    docker {
+      image 'maven:3.8.6-openjdk-11-slim'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
+    }
   }
  
   stages {
@@ -20,10 +21,23 @@ pipeline {
       }
     }
    
-  
+    stage('SonarQube Analysis') {
+      environment {
+        SONAR_URL = "http://172.31.33.45:9000"  // Your SonarQube server address
+      }
+      steps {
+        dir('spring-boot-app') {
+          withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+            sh 'mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
+          }
+        }
+      }
+    }
+   
     stage('Build and Push Docker Image') {
-
-
+      environment {
+        DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
+      }
       steps {
         dir('spring-boot-app') {
           script {

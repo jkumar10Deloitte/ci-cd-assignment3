@@ -1,9 +1,8 @@
 pipeline {
-  agent {
-    docker {
-      image 'maven:3.8.6-openjdk-11-slim'
-      args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
-    }
+  agent any
+ 
+  environment {
+    DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
   }
  
   stages {
@@ -21,10 +20,10 @@ pipeline {
       }
     }
    
+  
     stage('Build and Push Docker Image') {
-      environment {
-        DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
-      }
+
+
       steps {
         dir('spring-boot-app') {
           script {

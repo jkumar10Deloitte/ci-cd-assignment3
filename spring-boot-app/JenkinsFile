@@ -31,8 +31,8 @@ pipeline {
     }
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "abhishekf5/ultimate-cicd:${BUILD_NUMBER}"
-        // DOCKERFILE_LOCATION = "java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile"
+        DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd:${BUILD_NUMBER}"
+        // DOCKERFILE_LOCATION = "ci-cd-assignment3/spring-boot-app/Dockerfile"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
       steps {
@@ -47,17 +47,17 @@ pipeline {
     }
     stage('Update Deployment File') {
         environment {
-            GIT_REPO_NAME = "Jenkins-Zero-To-Hero"
-            GIT_USER_NAME = "iam-veeramalla"
+            GIT_REPO_NAME = "ci-cd-assignment3"
+            GIT_USER_NAME = "jkumar10Deloitte"
         }
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                 sh '''
-                    git config user.email "abhishek.xyz@gmail.com"
-                    git config user.name "Abhishek Veeramalla"
+                    git config user.email "jkumar10deloitte.com"
+                    git config user.name "jkumar10Deloitte"
                     BUILD_NUMBER=${BUILD_NUMBER}
-                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
-                    git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" ci-cd-assignment3/spring-boot-app-manifests/deployment.yml
+                    git add ci-cd-assignment3/spring-boot-app-manifests/deployment.yml
                     git commit -m "Update deployment image to version ${BUILD_NUMBER}"
                     git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
                 '''

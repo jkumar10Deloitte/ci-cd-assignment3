@@ -1,73 +1,75 @@
 pipeline {
-  agent any
-  environment {
-    DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
-  }
- 
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
     }
-   
-    stage('Build and Test') {
-      steps {
-        sh '''
-          # Use Maven through Docker
-          docker run --rm -v "$PWD/spring-boot-app":/app -w /app maven:3.8.6-openjdk-11-slim mvn clean package
-        '''
-      }
-    }
-   
-    stage('Build and Push Docker Image') {
-      steps {
-        dir('spring-boot-app') {
-          script {
-            def imageTag = "${DOCKER_IMAGE}:${BUILD_NUMBER}"
-            sh "docker build -t ${imageTag} ."
-            withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-              sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-              sh "docker push ${imageTag}"
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
             }
-          }
         }
-      }
-    }
-   
-    stage('Update Kubernetes Manifests') {
-      environment {
-        GIT_REPO_NAME = "ci-cd-assignment3"
-        GIT_USER_NAME = "jkumar10Deloitte"
-      }
-      steps {
-        script {
-          // Update image tag in deployment manifest
-          sh "sed -i 's|jiteshkumardeloitte/ci-cd:replaceImageTag|jiteshkumardeloitte/ci-cd:${BUILD_NUMBER}|g' spring-boot-app-manifests/deployment.yml"
-         
-          withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-            sh '''
-              git config user.email "jkumar10@deloitte.com"
-              git config user.name "jkumar10Deloitte"
-              git add spring-boot-app-manifests/deployment.yml
-              git commit -m "Update image to version ${BUILD_NUMBER}"
-              git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main
-            '''
-          }
+
+        stage('Build and Test') {
+            steps {
+                sh '''
+                    # Use Maven through Docker
+                    docker run --rm -v "$PWD/spring-boot-app":/app -w /app maven:3.8.6-openjdk-11-slim mvn clean package
+                '''
+            }
         }
-      }
+
+        stage('Build and Push Docker Image') {
+            steps {
+                dir('spring-boot-app') {
+                    script {
+                        def imageTag = "${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                        sh "docker build -t ${imageTag} ."
+                        withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                            sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                            sh "docker push ${imageTag}"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Update Kubernetes Manifests') {
+            environment {
+                GIT_REPO_NAME = "ci-cd-assignment3"
+                GIT_USER_NAME = "jkumar10Deloitte"
+            }
+            steps {
+                script {
+                    // Update image tag in deployment manifest
+                    sh "sed -i 's|jiteshkumardeloitte/ci-cd:replaceImageTag|jiteshkumardeloitte/ci-cd:${BUILD_NUMBER}|g' spring-boot-app-manifests/deployment.yml"
+                    
+                    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git config user.email "jkumar10@deloitte.com"
+                            git config user.name "jkumar10Deloitte"
+                            git checkout main
+                            git add -A
+                            git commit -m "Update image to version ${BUILD_NUMBER}" || echo "No changes to commit"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main
+                        '''
+                    }
+                }
+            }
+        }
     }
-  }
- 
-  post {
-    always {
-      cleanWs()
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'CI pipeline completed successfully! ArgoCD will handle the deployment.'
+        }
+        failure {
+            echo 'CI pipeline failed!'
+        }
     }
-    success {
-      echo 'CI pipeline completed successfully! ArgoCD will handle the deployment.'
-    }
-    failure {
-      echo 'CI pipeline failed!'
-    }
-  }
 }

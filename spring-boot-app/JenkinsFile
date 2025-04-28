@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
         SONARQUBE_URL = "http://10.0.1.213:9000"  // SonarQube server URL
+        SONAR_TOKEN   = "sonarqube"
     }
 
     stages {
@@ -29,7 +30,7 @@ pipeline {
                     sh '''
                         docker run --rm -v "$PWD/spring-boot-app":/app -w /app maven:3.8.6-openjdk-11-slim mvn sonar:sonar \
                         -Dsonar.host.url=${SONARQUBE_URL} \
-                        -Dsonar.login=${sonarqube}
+                        -Dsonar.login=${SONAR_TOKEN}
                     '''
                 }
             }

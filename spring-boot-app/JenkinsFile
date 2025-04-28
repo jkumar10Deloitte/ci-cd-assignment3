@@ -8,6 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                cleanWs() // Clean the workspace before checkout
                 checkout scm
             }
         }
@@ -21,7 +22,7 @@ pipeline {
             }
         }
 
-      stage('SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             environment {
                 SONAR_URL = "http://10.0.1.213:9000"  // SonarQube server address
             }
@@ -57,7 +58,7 @@ pipeline {
             steps {
                 script {
                     // Update image tag in deployment manifest
-                      sh "sed -i 's|jiteshkumardeloitte/ci-cd:replaceImageTag|jiteshkumardeloitte/ci-cd:${BUILD_NUMBER}|g' spring-boot-app-manifests/deployment.yml"
+                    sh "sed -i 's|jiteshkumardeloitte/ci-cd:replaceImageTag|jiteshkumardeloitte/ci-cd:${BUILD_NUMBER}|g' spring-boot-app-manifests/deployment.yml"
                     
                     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                         sh '''

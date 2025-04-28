@@ -29,7 +29,7 @@ pipeline {
                     sh '''
                         docker run --rm -v "$PWD/spring-boot-app":/app -w /app maven:3.8.6-openjdk-11-slim mvn sonar:sonar \
                         -Dsonar.host.url=${SONARQUBE_URL} \
-                        -Dsonar.login=sqa_e05ade5a978d58a40c41acc4afe18e0cf5846e6b
+                        -Dsonar.login=${sonarqube}
                     '''
                 }
             }

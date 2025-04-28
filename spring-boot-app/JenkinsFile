@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
         SONARQUBE_URL = "http://10.0.1.213:9000"  // SonarQube server URL
-        SONAR_TOKEN   = "sonarqube"
     }
 
     stages {
@@ -26,12 +25,14 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Run SonarQube analysis with the specified server URL
-                    sh '''
-                        docker run --rm -v "$PWD/spring-boot-app":/app -w /app maven:3.8.6-openjdk-11-slim mvn sonar:sonar \
-                        -Dsonar.host.url=${SONARQUBE_URL} \
-                        -Dsonar.login=${SONAR_TOKEN}
-                    '''
+                    // Access SonarQube token securely
+                    withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            docker run --rm -v "$PWD/spring-boot-app":/app -w /app maven:3.8.6-openjdk-11-slim mvn sonar:sonar \
+                            -Dsonar.host.url=${SONARQUBE_URL} \
+                            -Dsonar.login=${SONAR_TOKEN}
+                        '''
+                    }
                 }
             }
         }

@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
-        SONARQUBE_URL = "http://10.0.3.122:9000"  // SonarQube server URL
+        SONARQUBE_URL = "http://10.0.3.122:9000"  
     }
 
     stages {
@@ -25,7 +25,6 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Access SonarQube token securely
                     withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
                         sh '''
                             docker run --rm -v "$PWD/spring-boot-app":/app -w /app maven:3.8.6-openjdk-11-slim mvn sonar:sonar \
@@ -82,7 +81,7 @@ pipeline {
             cleanWs()
         }
         success {
-            echo 'CI pipeline completed successfully! ArgoCD will handle the deployment.'
+            echo 'CI pipeline completed successfully! ArgoCD will handle the deployment on eks cluster'
         }
         failure {
             echo 'CI pipeline failed!'

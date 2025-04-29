@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "jiteshkumardeloitte/ci-cd"
-        SONARQUBE_URL = "http://10.0.1.213:9000"  // SonarQube server URL
+        SONARQUBE_URL = "http://10.0.3.122:9000"  // SonarQube server URL
     }
 
     stages {
